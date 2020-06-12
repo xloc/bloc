@@ -1,20 +1,20 @@
-# Flutter Login Tutorial
+# Flutter 登陆教程
 
 ![intermediate](https://img.shields.io/badge/level-intermediate-orange.svg)
 
-> In the following tutorial, we're going to build a Login Flow in Flutter using the Bloc library.
+> 在这个教程中, 我们会使用Flutter和bloc库实现一个登陆的应用.
 
 ![demo](./assets/gifs/flutter_login.gif)
 
-## Setup
+## 项目的建立
 
-We'll start off by creating a brand new Flutter project
+我们从建立一个全新的flutter项目开始.
 
 ```bash
 flutter create flutter_login
 ```
 
-We can then go ahead and replace the contents of `pubspec.yaml` with
+用以下的代码替换`pubspec.yaml`中的内容
 
 ```yaml
 name: flutter_login
@@ -39,15 +39,15 @@ flutter:
   uses-material-design: true
 ```
 
-and then install all of our dependencies
+然后安装所有的依赖.
 
 ```bash
 flutter packages get
 ```
 
-## User Repository
+## User Repository (用户数据仓库)
 
-We're going to need to create a `UserRepository` which helps us manage a user's data.
+我们将会创建`UserRepository`来帮助我们管理用户的数据.
 
 ```dart
 class UserRepository {
@@ -79,31 +79,32 @@ class UserRepository {
 }
 ```
 
-?> **Note**: Our user repository is just mocking all of the different implementations for the sake of simplicity but in a real application you might inject a [HttpClient](https://pub.dev/packages/http) as well as something like [Flutter Secure Storage](https://pub.dev/packages/flutter_secure_storage) in order to request tokens and read/write them to keystore/keychain.
+?> **附注**: 简单起见, 我们的`UserRepository`只是在进行功能的模拟. 但在真正项目的实现中, 你可能希望依赖注入[HttpClient](https://pub.dev/packages/http)一些类似于[Flutter Secure Storage (Flutter 安全存储)](https://pub.dev/packages/flutter_secure_storage)的对象来读写真正的keystore(秘钥存储器)/keychain(钥匙串).
 
-## Authentication States
+## 验证 States(状态)
 
-Next, we’re going to need to determine how we’re going to manage the state of our application and create the necessary blocs (business logic components).
+下一步, 我们需要决定要怎么管理应用的不同状态, 并创建所需的 blocs (business logic components, 业务逻辑组件)
 
-At a high level, we’re going to need to manage the user’s Authentication State. A user's authentication state can be one of the following:
+总体来说, 我们需要管理用户的验证状态. 用户验证状态可以是以下的几种之一:
 
-- uninitialized - waiting to see if the user is authenticated or not on app start.
-- loading - waiting to persist/delete a token
+- uninitialized (未初始化) - 在应用启动的时候等待用户是否验证通过的状态
+- loading (加载中) - 等待维护/删除token的状态
 - authenticated - successfully authenticated
-- unauthenticated - not authenticated
+- authenticated (已验证) - 成功验证状态
+- unauthenticated (未验证) - 没验证通过的状态
 
-Each of these states will have an implication on what the user sees.
+对每种状态都会有与之对应的呈现给用户的内容.
 
-For example:
+比如:
+<!-- - if the authentication state was uninitialized, the user might be seeing a splash screen. -->
+- 如果验证状态是未初始化, 应该让用户看到splash屏幕
+- 如果验证状态是加载中, 应该让用户看到进度条屏幕
+- 如果验证状态是已验证, 应该让用户看到主屏幕.
+- 如果验证状态是未验证, 应该让用户看到登陆表单.
 
-- if the authentication state was uninitialized, the user might be seeing a splash screen.
-- if the authentication state was loading, the user might be seeing a progress indicator.
-- if the authentication state was authenticated, the user might see a home screen.
-- if the authentication state was unauthenticated, the user might see a login form.
+> 在开始实现之前就构想出要用到哪些不同的states, 这一点很非常重要.
 
-> It's critical to identify what the different states are going to be before diving into the implementation.
-
-Now that we have our authentication states identified, we can implement our `AuthenticationState` class.
+分析完都有哪些验证状态之后, 我们终于可以实现`AuthenticationState`类了.
 
 ```dart
 import 'package:equatable/equatable.dart';
@@ -122,17 +123,17 @@ class AuthenticationUnauthenticated extends AuthenticationState {}
 class AuthenticationLoading extends AuthenticationState {}
 ```
 
-?> **Note**: The [`equatable`](https://pub.dev/packages/equatable) package is used in order to be able to compare two instances of `AuthenticationState`. By default, `==` returns true only if the two objects are the same instance.
+?> **附注**: 我们使用[`equatable(相等)`](https://pub.dev/packages/equatable)包赋予`AuthenticationState`对象能互相比较相等的能力. 默认状态下, `==`仅当被比较对象是同一对象的时候才返回true.
 
-## Authentication Events
+## 验证 Events(事件)
 
-Now that we have our `AuthenticationState` defined we need to define the `AuthenticationEvents` which our `AuthenticationBloc` will be reacting to.
+定义好了`AuthenticationState`之后, 下一步我们需要定义`AuthenticationEvents`. 我们的`AuthenticationBloc`会根据这些events(事件)做出反应
 
-We will need:
+我们会需要:
 
-- an `AppStarted` event to notify the bloc that it needs to check if the user is currently authenticated or not.
-- a `LoggedIn` event to notify the bloc that the user has successfully logged in.
-- a `LoggedOut` event to notify the bloc that the user has successfully logged out.
+- `AppStarted` 事件来通知bloc, 告诉bloc需要检查当前用户是否已经通过了验证.
+- `LoggedIn` 事件来通知bloc, 告诉bloc这个用户已经成功的登入了.
+- `LoggedOut` 事件来通知bloc, 告诉bloc这个用户已经成功的登出了.
 
 ```dart
 import 'package:meta/meta.dart';
@@ -162,13 +163,13 @@ class LoggedIn extends AuthenticationEvent {
 class LoggedOut extends AuthenticationEvent {}
 ```
 
-?> **Note**: the `meta` package is used to annotate the `AuthenticationEvent` parameters as `@required`. This will cause the dart analyzer to warn developers if they don't provide the required parameters.
+?> **附注**: `meta`包被用于标注实例化`AuthenticationEvent`时必须传入的参数. 如果dart语法分析器发现开发者没有传入必须的参数, 它就会发出警告.
 
-## Authentication Bloc
+## 验证 Bloc
 
-Now that we have our `AuthenticationState` and `AuthenticationEvents` defined, we can get to work on implementing the `AuthenticationBloc` which is going to manage checking and updating a user's `AuthenticationState` in response to `AuthenticationEvents`.
+我们已经定义好了`AuthenticationState`和`AuthenticationEvents`. 下一步我们会开始实现`AuthenticationBloc`. 它会负责在发生新的`AuthenticationEvents`时检查和更新用户的`AuthenticationState`
 
-We'll start off by creating our `AuthenticationBloc` class.
+我们从创建`AuthenticationBloc`类开始.
 
 ```dart
 class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> {
@@ -178,18 +179,18 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
 }
 ```
 
-?> **Note**: Just from reading the class definition, we already know this bloc is going to be converting `AuthenticationEvents` into `AuthenticationStates`.
+?> **附注**: 只是从类的定义就可以知道: 这个bloc会把`AuthenticationEvents`转换成`AuthenticationStates`.
 
-?> **Note**: Our `AuthenticationBloc` has a dependency on the `UserRepository`.
+?> **附注**: 我们的`AuthenticationBloc`依赖了`UserRepository`
 
-We can start by overriding `initialState` to the `AuthenticationUninitialized()` state.
+我们可以从重写`initialState`方法开始. 让它返回 `AuthenticationUninitialized()`状态.
 
 ```dart
 @override
 AuthenticationState get initialState => AuthenticationUninitialized();
 ```
 
-Now all that's left is to implement `mapEventToState`.
+现在我们只剩下实现`mapEventToState`方法了.
 
 ```dart
 @override
@@ -220,7 +221,7 @@ Stream<AuthenticationState> mapEventToState(
 }
 ```
 
-Great! Our final `AuthenticationBloc` should look like
+好的! 我们最终的`AuthenticationBloc`应该会是这样
 
 ```dart
 import 'dart:async';
@@ -270,11 +271,11 @@ class AuthenticationBloc
 }
 ```
 
-Now that we have our `AuthenticationBloc` fully implemented, let’s get to work on the presentational layer.
+现在我们的`AuthenticationBloc`已经全都实现好了, 让我们开始表现层的工作吧.
 
-## Splash Page
+## Splash Page (启动页面)
 
-The first thing we’ll need is a `SplashPage` widget which will serve as our Splash Screen while our `AuthenticationBloc` determines whether or not a user is logged in.
+首先我们需要一个`SplashPage` widget. 在`AuthenticationBloc`确定用户是否登录之前, 这个widget将会作为Splash Screen(启动屏幕)呈现给用户.
 
 ```dart
 import 'package:flutter/material.dart';
@@ -291,9 +292,9 @@ class SplashPage extends StatelessWidget {
 }
 ```
 
-## Home Page
+## Home Screen (主页)
 
-Next, we will need to create our `HomePage` so that we can navigate users there once they have successfully logged in.
+下一步, 我们需要创建`HomePage`. 用户成功登入后会被引导到这个页面.
 
 ```dart
 import 'package:flutter/material.dart';
@@ -323,17 +324,17 @@ class HomePage extends StatelessWidget {
 }
 ```
 
-?> **Note**: This is the first class in which we are using `flutter_bloc`. We will get into `BlocProvider.of<AuthenticationBloc>(context)` shortly but for now just know that it allows our `HomePage` to access our `AuthenticationBloc`.
+?> **附注**: 这是第一个用到了`flutter_bloc`的类. 我们会马上讲到`BlocProvider.of<AuthenticationBloc>(context)`的含义, 现在你只需要知道通过这行程序我们就能访问到`AuthenticationBloc`.
 
-?> **Note**: We are adding a `LoggedOut` event to our `AuthenticationBloc` when a user pressed the logout button.
+?>  **附注**: 当用户点击 logout 按钮时, 我们会添加一个`LoggedOut`事件到`AuthenticationBloc`
 
-Next up, we need to create a `LoginPage` and `LoginForm`.
+再下一步, 我们需要创建`LoginPage`和`LoginForm`
 
-Because the `LoginForm` will have to handle user input (Login Button Pressed) and will need to have some business logic (getting a token for a given username/password), we will need to create a `LoginBloc`.
+`LoginForm`需要处理用户的输入(点击login按钮), 同时它也包含一些业务逻辑(为每次登陆获取一个token), 因此我们需要另外创建一个`LoginBloc`.
 
-Just like we did for the `AuthenticationBloc`, we will need to define the `LoginState`, and `LoginEvents`. Let’s start with `LoginState`.
+就像我们已经实现的`AuthenticationBloc`一样, 我们需要定义`LoginState`和`LoginEvents`. 让我们从`LoginState`开始吧
 
-## Login States
+## Login States (登陆状态)
 
 ```dart
 import 'package:meta/meta.dart';
@@ -363,15 +364,15 @@ class LoginFailure extends LoginState {
 }
 ```
 
-`LoginInitial` is the initial state of the LoginForm.
+`LoginInitial` 是登陆表单的初始状态.
 
-`LoginLoading` is the state of the LoginForm when we are validating credentials
+`LoginLoading` 是校验登录时登陆表单的状态.
 
-`LoginFailure` is the state of the LoginForm when a login attempt has failed.
+`LoginFailure` 是登录失败时登陆表单的状态.
 
-Now that we have the `LoginState` defined let’s take a look at the `LoginEvent` class.
+现在我们已经定义好了`LoginState`, 接下来让我们看看`LoginEvent`类吧
 
-## Login Events
+## Login Events (登录事件)
 
 ```dart
 import 'package:meta/meta.dart';
@@ -399,9 +400,9 @@ class LoginButtonPressed extends LoginEvent {
 }
 ```
 
-`LoginButtonPressed` will be added when a user pressed the login button. It will notify the `LoginBloc` that it needs to request a token for the given credentials.
+当用户点击登录按钮时, `LoginButtonPressed`事件会被添加给`LoginBloc`. 它会通知`LoginBloc`, 告诉它它需要为给定的账户请求一个token.
 
-We can now implement our `LoginBloc`.
+我们现在可以实现`LoginBloc`了
 
 ## Login Bloc
 
@@ -448,15 +449,15 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
 }
 ```
 
-?> **Note**: `LoginBloc` has a dependency on `UserRepository` in order to authenticate a user given a username and password.
+?> **附注**: `LoginBloc`依赖了`UserRepository`, 因为我们需要通过`UserRepository`校验给定的用户名和密码的合法性.
 
-?> **Note**: `LoginBloc` has a dependency on `AuthenticationBloc` in order to update the AuthenticationState when a user has entered valid credentials.
+?> **附注**: `LoginBloc`依赖了`AuthenticationBloc`, 因为在用户输入正确的信息时我们需要通过`AuthenticationBloc`更新`AuthenticationState`.
 
-Now that we have our `LoginBloc` we can start working on `LoginPage` and `LoginForm`.
+这样我们就写好了`LoginBloc`. 接下来, 我们可以开始`LoginPage`和`LoginForm`的工作了.
 
-## Login Page
+## Login Page (登陆页面)
 
-The `LoginPage` widget will serve as our container widget and will provide the necessary dependencies to the `LoginForm` widget (`LoginBloc` and `AuthenticationBloc`).
+`LoginPage` widget 是一个容器widget, 它会为它的子树注入`LoginBloc`和`AuthenticationBloc`的依赖
 
 ```dart
 import 'package:flutter/material.dart';
@@ -494,15 +495,15 @@ class LoginPage extends StatelessWidget {
 }
 ```
 
-?> **Note**: `LoginPage` is a `StatelessWidget`. The `LoginPage` widget uses the `BlocProvider` widget to create, close, and provide the `LoginBloc` to the sub-tree.
+?> **附注**: `LoginPage`是一个`StatelessWidget (无状态 widget)`. `LoginPage`将会使用`BlocProvider`来 创建、关闭 `LoginBloc`, 并让`LoginBloc`能被子树中的widget访问到.
 
-?> **Note**: We are using the injected `UserRepository` in order to create our `LoginBloc`.
+?> **附注**: 我们使用依赖注入到这里的`UserRepository`来创建`LoginBloc`
 
-?> **Note**: We are using `BlocProvider.of<AuthenticationBloc>(context)` again in order to access the `AuthenticationBloc` from the `LoginPage`.
+?> **附注**: 我们又一次用到了`BlocProvider.of<AuthenticationBloc>(context)`来从`LoginPage`访问`AuthenticationBloc`.
 
-Next up, let’s go ahead and create our `LoginForm`.
+下一步让我们继续向前进行, 创建`LoginForm`吧.
 
-## Login Form
+## Login Form (登陆表单)
 
 ```dart
 import 'package:flutter/material.dart';
@@ -574,11 +575,11 @@ class _LoginFormState extends State<LoginForm> {
 }
 ```
 
-?> **Note**: Our `LoginForm` uses the `BlocBuilder` widget so that it can rebuild whenever there is a new `LoginState`. `BlocBuilder` is a Flutter widget which requires a Bloc and a builder function. `BlocBuilder` handles building the widget in response to new states. `BlocBuilder` is very similar to `StreamBuilder` but has a more simple API to reduce the amount of boilerplate code needed and various performance optimizations.
+?> **附注**: `LoginForm`使用了 `BlocBuilder` widget. `BlocBuilder`会负责在`LoginState`更新时重新构建他下属的widget. 实例化一个`BlocBuilder`需要提供一个 `bloc`和一个`builder函数`作为参数. `BlocBuilder`会相应新产生的state, 用他们构建新的widget. `BlocBuilder`很像`StreamBuilder`, 但它的API更简单, 减少了很多重复的代码的同时也比`StreamBuilder`多进行了很多性能的优化.
 
-There’s not much else going on in the `LoginForm` widget so let's move on to creating our loading indicator.
+这样`LoginForm`就没什么其他要做的事情了, 所以我们继续创建 loading indicator (加载指示器) widget 吧.
 
-## Loading Indicator
+## Loading Indicator (加载指示器)
 
 ```dart
 import 'package:flutter/material.dart';
@@ -591,9 +592,9 @@ class LoadingIndicator extends StatelessWidget {
 }
 ```
 
-Now it’s finally time to put it all together and create our main App widget in `main.dart`.
+现在终于是时候把一切整合起来了, 我们会在`main.dart`创建应用的主widget.
 
-## Putting it all together
+## 把一切整合起来
 
 ```dart
 import 'package:flutter/material.dart';
@@ -671,14 +672,14 @@ class App extends StatelessWidget {
 }
 ```
 
-?> **Note**: Again, we are using `BlocBuilder` in order to react to changes in `AuthenticationState` so that we can show the user either the `SplashPage`, `LoginPage`, `HomePage`, or `LoadingIndicator` based on the current `AuthenticationState`.
+?> **附注**: 又一次, 我们使用了`BlocBuilder`来相应`AuthenticationState`的改变. 我们会根据当前的`AuthenticationState`来决定我们会给用户展示`SplashPage`, `LoginPage`, `HomePage`, `LoadingIndicator`中的哪个.
 
-?> **Note**: Our app is wrapped in a `BlocProvider` which makes our instance of `AuthenticationBloc` available to the entire widget subtree. `BlocProvider` is a Flutter widget which provides a bloc to its children via `BlocProvider.of(context)`. It is used as a dependency injection (DI) widget so that a single instance of a bloc can be provided to multiple widgets within a subtree.
+?> **附注**: 你会发现整个应用被包裹在一个`BlocProvider`里面, 因为这样就可以使`AuthenticationBloc`能够被整个widget子树访问到了. `BlocProvider`是一个 flutter widget, 它会通过`BlocProvider.of(context)`向它的子widget提供bloc(这也就是依赖注入). 它被用作为一个依赖注入(DI) widget, 这样可以保证同一个bloc被提供给子树中的多个widget.
 
-Now `BlocProvider.of<AuthenticationBloc>(context)` in our `HomePage` and `LoginPage` widget should make sense.
+这样我们在`HomePage`和`LoginPage`里面写的`BlocProvider.of<AuthenticationBloc>(context)`就可以用了.
 
-Since we wrapped our `App` within a `BlocProvider<AuthenticationBloc>` we can access the instance of our `AuthenticationBloc` by using the `BlocProvider.of<AuthenticationBloc>(BuildContext context)` static method from anywhere in the subtree.
+因为我们的 `App` widget 被包裹在了`BlocProvider<AuthenticationBloc>`里面, 我们可以在子树中的任何地方用`BlocProvider.of<AuthenticationBloc>(BuildContext context)`静态方法来访问同一个`AuthenticationBloc`的实例.
 
-At this point we have a pretty solid login implementation and we have decoupled our presentation layer from the business logic layer by using Bloc.
+到此为止, 我们已经很好的实现了登陆功能, 用bloc库达到了表现层和业务逻辑层的解耦.
 
-The full source for this example can be found [here](https://github.com/felangel/Bloc/tree/master/examples/flutter_login).
+你可以在[这里](https://github.com/felangel/Bloc/tree/master/examples/flutter_login)找到这个例子的完整的代码.
