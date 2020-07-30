@@ -3,28 +3,28 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:flutter/widgets.dart';
 
-import '../flutter_bloc.dart';
+import 'bloc_provider.dart';
 
-/// Signature for the [builder] function which takes the `BuildContext` and
+/// Signature for the `builder` function which takes the `BuildContext` and
 /// [state] and is responsible for returning a widget which is to be rendered.
-/// This is analogous to the [builder] function in [StreamBuilder].
+/// This is analogous to the `builder` function in [StreamBuilder].
 typedef BlocWidgetBuilder<S> = Widget Function(BuildContext context, S state);
 
-/// Signature for the condition function which takes the previous [state] and
-/// the current [state] and is responsible for returning a [bool] which
-/// determines whether or not to rebuild [BlocBuilder] with the current [state].
+/// Signature for the `buildWhen` function which takes the previous `state` and
+/// the current `state` and is responsible for returning a [bool] which
+/// determines whether to rebuild [BlocBuilder] with the current `state`.
 typedef BlocBuilderCondition<S> = bool Function(S previous, S current);
 
-/// {@template blocbuilder}
-/// [BlocBuilder] handles building a widget in response to new [states].
+/// {@template bloc_builder}
+/// [BlocBuilder] handles building a widget in response to new `states`.
 /// [BlocBuilder] is analogous to [StreamBuilder] but has simplified API to
-/// reduce the amount of boilerplate code needed as well as [bloc]-specific
+/// reduce the amount of boilerplate code needed as well as [cubit]-specific
 /// performance improvements.
 
-/// Please refer to [BlocListener] if you want to "do" anything in response to
-/// [state] changes such as navigation, showing a dialog, etc...
+/// Please refer to `BlocListener` if you want to "do" anything in response to
+/// `state` changes such as navigation, showing a dialog, etc...
 ///
-/// If the [bloc] parameter is omitted, [BlocBuilder] will automatically
+/// If the [cubit] parameter is omitted, [BlocBuilder] will automatically
 /// perform a lookup using [BlocProvider] and the current `BuildContext`.
 ///
 /// ```dart
@@ -35,32 +35,32 @@ typedef BlocBuilderCondition<S> = bool Function(S previous, S current);
 /// )
 /// ```
 ///
-/// Only specify the [bloc] if you wish to provide a [bloc] that is otherwise
+/// Only specify the [cubit] if you wish to provide a [cubit] that is otherwise
 /// not accessible via [BlocProvider] and the current `BuildContext`.
 ///
 /// ```dart
 /// BlocBuilder<BlocA, BlocAState>(
-///   bloc: blocA,
+///   cubit: blocA,
 ///   builder: (context, state) {
 ///   // return widget here based on BlocA's state
 ///   }
 /// )
 /// ```
-///
-/// An optional [condition] can be implemented for more granular control over
+/// {@endtemplate}
+/// {@template bloc_builder_build_when}
+/// An optional [buildWhen] can be implemented for more granular control over
 /// how often [BlocBuilder] rebuilds.
-/// The [condition] function will be invoked on each [bloc] [state] change.
-/// The [condition] takes the previous [state] and current [state] and must
+/// [buildWhen] will be invoked on each [cubit] `state` change.
+/// [buildWhen] takes the previous `state` and current `state` and must
 /// return a [bool] which determines whether or not the [builder] function will
 /// be invoked.
-/// The previous [state] will be initialized to the [state] of the [bloc] when
+/// The previous `state` will be initialized to the `state` of the [cubit] when
 /// the [BlocBuilder] is initialized.
-/// [condition] is optional and if it isn't implemented, it will default to
-/// `true`.
+/// [buildWhen] is optional and if omitted, it will default to `true`.
 ///
 /// ```dart
 /// BlocBuilder<BlocA, BlocAState>(
-///   condition: (previous, current) {
+///   buildWhen: (previous, current) {
 ///     // return true/false to determine whether or not
 ///     // to rebuild the widget with state
 ///   },
@@ -70,89 +70,81 @@ typedef BlocBuilderCondition<S> = bool Function(S previous, S current);
 ///)
 /// ```
 /// {@endtemplate}
-class BlocBuilder<B extends Bloc<dynamic, S>, S> extends BlocBuilderBase<B, S> {
-  /// The [builder] function which will be invoked on each widget build.
-  /// The [builder] takes the `BuildContext` and current [state] and
-  /// must return a widget.
-  /// This is analogous to the [builder] function in [StreamBuilder].
-  final BlocWidgetBuilder<S> builder;
-
-  /// {@macro blocbuilder}
+class BlocBuilder<C extends Cubit<S>, S> extends BlocBuilderBase<C, S> {
+  /// {@macro bloc_builder}
   const BlocBuilder({
     Key key,
     @required this.builder,
-    B bloc,
-    BlocBuilderCondition<S> condition,
+    C cubit,
+    BlocBuilderCondition<S> buildWhen,
   })  : assert(builder != null),
-        super(key: key, bloc: bloc, condition: condition);
+        super(key: key, cubit: cubit, buildWhen: buildWhen);
+
+  /// The [builder] function which will be invoked on each widget build.
+  /// The [builder] takes the `BuildContext` and current `state` and
+  /// must return a widget.
+  /// This is analogous to the [builder] function in [StreamBuilder].
+  final BlocWidgetBuilder<S> builder;
 
   @override
   Widget build(BuildContext context, S state) => builder(context, state);
 }
 
-/// {@template blocbuilderbase}
+/// {@template bloc_builder_base}
 /// Base class for widgets that build themselves based on interaction with
-/// a specified [bloc].
+/// a specified [cubit].
 ///
 /// A [BlocBuilderBase] is stateful and maintains the state of the interaction
 /// so far. The type of the state and how it is updated with each interaction
 /// is defined by sub-classes.
 /// {@endtemplate}
-abstract class BlocBuilderBase<B extends Bloc<dynamic, S>, S>
-    extends StatefulWidget {
-  /// {@macro blocbuilderbase}
-  const BlocBuilderBase({Key key, this.bloc, this.condition}) : super(key: key);
+abstract class BlocBuilderBase<C extends Cubit<S>, S> extends StatefulWidget {
+  /// {@macro bloc_builder_base}
+  const BlocBuilderBase({Key key, this.cubit, this.buildWhen})
+      : super(key: key);
 
-  /// The [bloc] that the [BlocBuilderBase] will interact with.
+  /// The [cubit] that the [BlocBuilderBase] will interact with.
   /// If omitted, [BlocBuilderBase] will automatically perform a lookup using
   /// [BlocProvider] and the current `BuildContext`.
-  final B bloc;
+  final C cubit;
 
-  /// The [BlocBuilderCondition] that the [BlocBuilderBase] will invoke.
-  /// The [condition] function will be invoked on each [bloc] [state] change.
-  /// The [condition] takes the previous [state] and current [state] and must
-  /// return a [bool] which determines whether or not the [builder] function
-  /// will be invoked.
-  /// The previous [state] will be initialized to [state] when the
-  /// [BlocBuilderBase] is initialized.
-  /// [condition] is optional and if it isn't implemented, it will default to
-  /// `true`.
-  final BlocBuilderCondition<S> condition;
+  /// {@macro bloc_builder_build_when}
+  final BlocBuilderCondition<S> buildWhen;
 
   /// Returns a widget based on the `BuildContext` and current [state].
   Widget build(BuildContext context, S state);
 
   @override
-  State<BlocBuilderBase<B, S>> createState() => _BlocBuilderBaseState<B, S>();
+  State<BlocBuilderBase<C, S>> createState() => _BlocBuilderBaseState<C, S>();
 }
 
-class _BlocBuilderBaseState<B extends Bloc<dynamic, S>, S>
-    extends State<BlocBuilderBase<B, S>> {
+class _BlocBuilderBaseState<C extends Cubit<S>, S>
+    extends State<BlocBuilderBase<C, S>> {
   StreamSubscription<S> _subscription;
   S _previousState;
   S _state;
-  B _bloc;
+  C _cubit;
 
   @override
   void initState() {
     super.initState();
-    _bloc = widget.bloc ?? BlocProvider.of<B>(context);
-    _previousState = _bloc?.state;
-    _state = _bloc?.state;
+    _cubit = widget.cubit ?? context.bloc<C>();
+    _previousState = _cubit?.state;
+    _state = _cubit?.state;
     _subscribe();
   }
 
   @override
-  void didUpdateWidget(BlocBuilderBase<B, S> oldWidget) {
+  void didUpdateWidget(BlocBuilderBase<C, S> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final oldBloc = oldWidget.bloc ?? BlocProvider.of<B>(context);
-    final currentBloc = widget.bloc ?? oldBloc;
-    if (oldBloc != currentBloc) {
+    final oldCubit = oldWidget.cubit ?? context.bloc<C>();
+    final currentBloc = widget.cubit ?? oldCubit;
+    if (oldCubit != currentBloc) {
       if (_subscription != null) {
         _unsubscribe();
-        _bloc = widget.bloc ?? BlocProvider.of<B>(context);
-        _previousState = _bloc?.state;
-        _state = _bloc?.state;
+        _cubit = widget.cubit ?? context.bloc<C>();
+        _previousState = _cubit?.state;
+        _state = _cubit?.state;
       }
       _subscribe();
     }
@@ -168,9 +160,9 @@ class _BlocBuilderBaseState<B extends Bloc<dynamic, S>, S>
   }
 
   void _subscribe() {
-    if (_bloc != null) {
-      _subscription = _bloc.skip(1).listen((state) {
-        if (widget.condition?.call(_previousState, state) ?? true) {
+    if (_cubit != null) {
+      _subscription = _cubit.listen((state) {
+        if (widget.buildWhen?.call(_previousState, state) ?? true) {
           setState(() {
             _state = state;
           });

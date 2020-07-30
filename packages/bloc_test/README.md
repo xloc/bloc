@@ -1,90 +1,98 @@
-<img src="https://raw.githubusercontent.com/felangel/bloc/master/docs/assets/bloc_test_logo_full.png" height="60" alt="Bloc Test Package" />
+<p align="center">
+<img src="https://raw.githubusercontent.com/felangel/bloc/master/docs/assets/bloc_test_logo_full.png" height="100" alt="Bloc Test Package" />
+</p>
 
-[![Pub](https://img.shields.io/pub/v/bloc_test.svg)](https://pub.dev/packages/bloc_test)
-[![build](https://github.com/felangel/bloc/workflows/build/badge.svg)](https://github.com/felangel/bloc/actions)
-[![codecov](https://codecov.io/gh/felangel/Bloc/branch/master/graph/badge.svg)](https://codecov.io/gh/felangel/bloc)
-[![style: effective dart](https://img.shields.io/badge/style-effective_dart-40c4ff.svg)](https://github.com/tenhobi/effective_dart)
-[![Flutter Website](https://img.shields.io/badge/flutter-website-deepskyblue.svg)](https://flutter.dev/docs/development/data-and-backend/state-mgmt/options#bloc--rx)
-[![Awesome Flutter](https://img.shields.io/badge/awesome-flutter-blue.svg?longCache=true)](https://github.com/Solido/awesome-flutter#standard)
-[![Flutter Samples](https://img.shields.io/badge/flutter-samples-teal.svg?longCache=true)](http://fluttersamples.com)
-[![Star on GitHub](https://img.shields.io/github/stars/felangel/bloc.svg?style=flat&logo=github&colorB=deeppink&label=stars)](https://github.com/felangel/bloc)
-[![Discord](https://img.shields.io/discord/649708778631200778.svg?logo=discord&color=blue)](https://discord.gg/Hc5KD3g)
-[![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
+<p align="center">
+<a href="https://pub.dev/packages/bloc_test"><img src="https://img.shields.io/pub/v/bloc_test.svg" alt="Pub"></a>
+<a href="https://github.com/felangel/bloc/actions"><img src="https://github.com/felangel/bloc/workflows/build/badge.svg" alt="build"></a>
+<a href="https://codecov.io/gh/felangel/bloc"><img src="https://codecov.io/gh/felangel/Bloc/branch/master/graph/badge.svg" alt="codecov"></a>
+<a href="https://github.com/felangel/bloc"><img src="https://img.shields.io/github/stars/felangel/bloc.svg?style=flat&logo=github&colorB=deeppink&label=stars" alt="Star on Github"></a>
+<a href="https://github.com/tenhobi/effective_dart"><img src="https://img.shields.io/badge/style-effective_dart-40c4ff.svg" alt="style: effective dart"></a>
+<a href="https://flutter.dev/docs/development/data-and-backend/state-mgmt/options#bloc--rx"><img src="https://img.shields.io/badge/flutter-website-deepskyblue.svg" alt="Flutter Website"></a>
+<a href="https://github.com/Solido/awesome-flutter#standard"><img src="https://img.shields.io/badge/awesome-flutter-blue.svg?longCache=true" alt="Awesome Flutter"></a>
+<a href="https://fluttersamples.com"><img src="https://img.shields.io/badge/flutter-samples-teal.svg?longCache=true" alt="Flutter Samples"></a>
+<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-purple.svg" alt="License: MIT"></a>
+<a href="https://discord.gg/Hc5KD3g"><img src="https://img.shields.io/discord/649708778631200778.svg?logo=discord&color=blue" alt="Discord"></a>
+<a href="https://github.com/felangel/bloc"><img src="https://tinyurl.com/bloc-library" alt="Bloc Library"></a>
+</p>
 
 ---
 
-A Dart package that makes testing blocs easy. Built to work with [bloc](https://pub.dev/packages/bloc) and [mockito](https://pub.dev/packages/mockito).
+A Dart package that makes testing blocs and cubits easy. Built to work with [bloc](https://pub.dev/packages/bloc) and [mockito](https://pub.dev/packages/mockito).
 
-## Create a Mock Bloc
+**Learn more at [bloclibrary.dev](https://bloclibrary.dev)!**
+
+## Create a Mock
 
 ```dart
 import 'package:bloc_test/bloc_test.dart';
 
-class MockCounterBloc extends MockBloc<CounterEvent, int> implements CounterBloc {}
+class MockCounterBloc extends MockBloc<int> implements CounterBloc {}
+class MockCounterCubit extends MockBloc<int> implements CounterCubit {}
 ```
 
-## Stub the Bloc Stream
+## Stub the State Stream
 
-**whenListen** creates a stub response for the `listen` method on a `Bloc`. Use `whenListen` if you want to return a canned `Stream` of states for a bloc instance. `whenListen` also handles stubbing the `state` of the bloc to stay in sync with the emitted state.
+**whenListen** creates a stub response for the `listen` method on a bloc or cubit. Use `whenListen` if you want to return a canned `Stream` of states. `whenListen` also handles stubbing the `state` to stay in sync with the emitted state.
 
 ```dart
 // Create a mock instance
 final counterBloc = MockCounterBloc();
 
-// Stub the bloc `Stream`
+// Stub the state stream
 whenListen(counterBloc, Stream.fromIterable([0, 1, 2, 3]));
 
-// Assert that the bloc emits the stubbed `Stream`.
+// Assert that the stubbed stream is emitted.
 await expectLater(counterBloc, emitsInOrder(<int>[0, 1, 2, 3])))
 
-// Assert that the bloc's current state is in sync with the `Stream`.
+// Assert that the current state is in sync with the stubbed stream.
 expect(counterBloc.state, equals(3));
 ```
 
-## Unit Test a Real Bloc with blocTest
+## Unit Test with blocTest
 
-**blocTest** creates a new `bloc`-specific test case with the given `description`. `blocTest` will handle asserting that the `bloc` emits the `expect`ed states (in order) after `act` is executed. `blocTest` also handles ensuring that no additional states are emitted by closing the `bloc` stream before evaluating the `expect`ation.
+**blocTest** creates a new `cubit`-specific test case with the given `description`. `blocTest` will handle asserting that the `cubit` emits the `expect`ed states (in order) after `act` is executed. `blocTest` also handles ensuring that no additional states are emitted by closing the `cubit` stream before evaluating the `expect`ation.
 
-`build` should be used for all `bloc` initialization and preparation and must return the `bloc` under test as a `Future`.
+`build` should be used for all `cubit` initialization and preparation and must return the `cubit` under test.
 
-`act` is an optional callback which will be invoked with the `bloc` under test and should be used to `add` events to the `bloc`.
+`act` is an optional callback which will be invoked with the `cubit` under test and should be used to `add` events to the `cubit`.
 
-`skip` is an optional `int` which can be used to skip any number of states. The default value is 1 which skips the `initialState` of the bloc. `skip` can be overridden to include the `initialState` by setting skip to 0.
+`skip` is an optional `int` which can be used to skip any number of states and defaults to `0`.
 
-`wait` is an optional `Duration` which can be used to wait for async operations within the `bloc` under test such as `debounceTime`.
+`wait` is an optional `Duration` which can be used to wait for async operations within the `cubit` under test such as `debounceTime`.
 
-`expect` is an optional `Iterable<State>` which the `bloc` under test is expected to emit after `act` is executed.
+`expect` is an optional `Iterable<State>` which the `cubit` under test is expected to emit after `act` is executed.
 
-`verify` is an optional callback which is invoked after `expect` and can be used for additional verification/assertions. `verify` is called with the `bloc` returned by `build`.
+`verify` is an optional callback which is invoked after `expect` and can be used for additional verification/assertions. `verify` is called with the `cubit` returned by `build`.
 
-`errors` is an optional `Iterable` of error matchers which the `bloc` under test is expected to have thrown after `act` is executed.
+`errors` is an optional `Iterable` of error matchers which the `cubit` under test is expected to have thrown after `act` is executed.
 
 ```dart
 group('CounterBloc', () {
   blocTest(
     'emits [] when nothing is added',
-    build: () async => CounterBloc(),
+    build: () => CounterBloc(),
     expect: [],
   );
 
   blocTest(
     'emits [1] when CounterEvent.increment is added',
-    build: () async => CounterBloc(),
+    build: () => CounterBloc(),
     act: (bloc) => bloc.add(CounterEvent.increment),
     expect: [1],
   );
 });
 ```
 
-`blocTest` can also be used to `skip` any number of emitted states before asserting against the expected states. The default value is 1 which skips the `initialState` of the bloc. `skip` can be overridden to include the `initialState` by setting skip to 0.
+`blocTest` can also be used to `skip` any number of emitted states before asserting against the expected states. The default value is 0.
 
 ```dart
 blocTest(
-  'CounterBloc emits [0, 1] when CounterEvent.increment is added',
-  build: () async => CounterBloc(),
-  act: (bloc) => bloc.add(CounterEvent.increment),
-  skip: 0,
-  expect: [0, 1],
+  'CounterBloc emits [2] when CounterEvent.increment is added twice',
+  build: () => CounterBloc(),
+  act: (bloc) => bloc..add(CounterEvent.increment)..add(CounterEvent.increment),
+  skip: 1,
+  expect: [2],
 );
 ```
 
@@ -93,7 +101,7 @@ blocTest(
 ```dart
 blocTest(
   'CounterBloc emits [1] when CounterEvent.increment is added',
-  build: () async => CounterBloc(),
+  build: () => CounterBloc(),
   act: (bloc) => bloc.add(CounterEvent.increment),
   wait: const Duration(milliseconds: 300),
   expect: [1],
@@ -105,10 +113,10 @@ blocTest(
 ```dart
 blocTest(
   'CounterBloc emits [1] when CounterEvent.increment is added',
-  build: () async => CounterBloc(),
+  build: () => CounterBloc(),
   act: (bloc) => bloc.add(CounterEvent.increment),
   expect: [1],
-  verify: (_) async {
+  verify: (_) {
     verify(repository.someMethod(any)).called(1);
   }
 );
@@ -119,7 +127,7 @@ blocTest(
 ```dart
 blocTest(
   'CounterBloc throws Exception when null is added',
-  build: () async => CounterBloc(),
+  build: () => CounterBloc(),
   act: (bloc) => bloc.add(null),
   errors: [
     isA<Exception>(),
@@ -132,7 +140,7 @@ blocTest(
 ```dart
 blocTest(
   'emits [StateB] when MyEvent is added',
-  build: () async => MyBloc(),
+  build: () => MyBloc(),
   act: (bloc) => bloc.add(MyEvent()),
   expect: [isA<StateB>()],
 );
@@ -150,8 +158,7 @@ group('CounterBloc', () {
   });
 
   test('emits [1] when CounterEvent.increment is added', () async {
-    final bloc = CounterBloc();
-    bloc.add(CounterEvent.increment);
+    final bloc = CounterBloc()..add(CounterEvent.increment);
     await emitsExactly(bloc, [1]);
   });
 });
@@ -161,19 +168,19 @@ group('CounterBloc', () {
 
 ```dart
 test('emits [StateB] when EventB is added', () async {
-  final bloc = MyBloc();
-  bloc.add(EventB());
+  final bloc = MyBloc()..add(EventB());
   await emitsExactly(bloc, [isA<StateB>()]);
 });
 ```
 
-`skip` is an optional `int` which defaults to 1 and can be used to skip any number of states. The default behavior skips the `initialState` of the bloc but can be overridden to include the `initialState` by setting skip to 0.
+`skip` is an optional `int` which defaults to 0 and can be used to skip any number of states.
 
 ```dart
-test('emits [0, 1] when CounterEvent.increment is added', () async {
-  final bloc = CounterBloc();
-  bloc.add(CounterEvent.increment);
-  await emitsExactly(bloc, [0, 1], skip: 0);
+test('emits [2] when CounterEvent.increment is added twice and skip is 1', () async {
+  final bloc = CounterBloc()
+    ..add(CounterEvent.increment)
+    ..add(CounterEvent.increment);
+  await emitsExactly(bloc, [2], skip: 1);
 });
 ```
 
@@ -181,8 +188,7 @@ test('emits [0, 1] when CounterEvent.increment is added', () async {
 
 ```dart
 test('emits [1] when CounterEvent.increment is added', () async {
-  final bloc = CounterBloc();
-  bloc.add(CounterEvent.increment);
+  final bloc = CounterBloc()..add(CounterEvent.increment);
   await emitsExactly(bloc, [1], duration: const Duration(milliseconds: 300));
 });
 ```
@@ -194,3 +200,7 @@ test('emits [1] when CounterEvent.increment is added', () async {
 ## Maintainers
 
 - [Felix Angelov](https://github.com/felangel)
+
+## Supporters
+
+[<img src="https://raw.githubusercontent.com/felangel/bloc/master/docs/assets/vgv_logo.png" width="120" />](https://verygood.ventures)

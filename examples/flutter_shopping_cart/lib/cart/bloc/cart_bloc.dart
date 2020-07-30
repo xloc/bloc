@@ -8,21 +8,20 @@ part 'cart_event.dart';
 part 'cart_state.dart';
 
 class CartBloc extends Bloc<CartEvent, CartState> {
-  @override
-  CartState get initialState => CartLoading();
+  CartBloc() : super(CartLoading());
 
   @override
   Stream<CartState> mapEventToState(
     CartEvent event,
   ) async* {
-    if (event is LoadCart) {
-      yield* _mapLoadCartToState();
-    } else if (event is AddItem) {
-      yield* _mapAddItemToState(event);
+    if (event is CartStarted) {
+      yield* _mapCartStartedToState();
+    } else if (event is CartItemAdded) {
+      yield* _mapCartItemAddedToState(event);
     }
   }
 
-  Stream<CartState> _mapLoadCartToState() async* {
+  Stream<CartState> _mapCartStartedToState() async* {
     yield CartLoading();
     try {
       await Future.delayed(Duration(seconds: 1));
@@ -32,7 +31,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     }
   }
 
-  Stream<CartState> _mapAddItemToState(AddItem event) async* {
+  Stream<CartState> _mapCartItemAddedToState(CartItemAdded event) async* {
     final currentState = state;
     if (currentState is CartLoaded) {
       try {

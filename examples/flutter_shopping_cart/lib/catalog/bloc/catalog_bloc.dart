@@ -8,22 +8,21 @@ part 'catalog_event.dart';
 part 'catalog_state.dart';
 
 class CatalogBloc extends Bloc<CatalogEvent, CatalogState> {
-  @override
-  CatalogState get initialState => CatalogLoading();
+  CatalogBloc() : super(CatalogLoading());
 
   @override
   Stream<CatalogState> mapEventToState(
     CatalogEvent event,
   ) async* {
-    if (event is LoadCatalog) {
-      yield* _mapLoadCatalogToState();
+    if (event is CatalogStarted) {
+      yield* _mapCatalogStartedToState();
     }
   }
 
-  Stream<CatalogState> _mapLoadCatalogToState() async* {
+  Stream<CatalogState> _mapCatalogStartedToState() async* {
     yield CatalogLoading();
     try {
-      await Future.delayed(Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 500));
       yield CatalogLoaded(Catalog());
     } catch (_) {
       yield CatalogError();

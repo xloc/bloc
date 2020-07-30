@@ -1,279 +1,325 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:pedantic/pedantic.dart';
 import 'package:test/test.dart';
-import 'helpers/helpers.dart';
 
-class MockCounterBloc extends MockBloc<CounterEvent, int>
-    implements CounterBloc {}
+import 'cubits/cubits.dart';
+
+class MockCounterCubit extends MockBloc<int> implements CounterCubit {}
 
 void main() {
   group('whenListen', () {
-    test('can mock the stream of a single bloc with an empty Stream', () {
-      final counterBloc = MockCounterBloc();
-      whenListen(counterBloc, Stream<int>.empty());
-      expectLater(
-        counterBloc,
-        emitsInOrder(<int>[]),
+    test('can mock the stream of a single cubit with an empty Stream', () {
+      final counterCubit = MockCounterCubit();
+      whenListen<int>(counterCubit, const Stream<int>.empty());
+      expectLater(counterCubit, emitsInOrder(<int>[]));
+    });
+
+    test('can mock the stream of a single cubit', () async {
+      final counterCubit = MockCounterCubit();
+      whenListen<int>(
+        counterCubit,
+        Stream.fromIterable([0, 1, 2, 3]),
       );
-    });
-
-    test('can mock the stream of a single bloc', () {
-      final counterBloc = MockCounterBloc();
-      whenListen(counterBloc, Stream.fromIterable([0, 1, 2, 3]));
-      expectLater(
-        counterBloc,
-        emitsInOrder(
-          <Matcher>[equals(0), equals(1), equals(2), equals(3), emitsDone],
-        ),
-      );
-    });
-
-    test('can mock the stream of a single bloc with delays', () async {
-      final counterBloc = MockCounterBloc();
-      final controller = StreamController<int>();
-      whenListen(counterBloc, controller.stream);
-      expectLater(
-        counterBloc,
-        emitsInOrder(
-          <Matcher>[equals(0), equals(1), equals(2), equals(3), emitsDone],
-        ),
-      );
-      controller.add(0);
-      await Future.delayed(const Duration(milliseconds: 10));
-      controller.add(1);
-      await Future.delayed(const Duration(milliseconds: 10));
-      controller.add(2);
-      await Future.delayed(const Duration(milliseconds: 10));
-      controller.add(3);
-      controller.close();
-    });
-
-    test('can mock the stream of a single bloc with delays and skip(1)',
-        () async {
-      final counterBloc = MockCounterBloc();
-      final controller = StreamController<int>();
-      whenListen(counterBloc, controller.stream);
-      expectLater(
-        counterBloc.skip(1),
-        emitsInOrder(
-          <Matcher>[equals(1), equals(2), equals(3), emitsDone],
-        ),
-      );
-      controller.add(0);
-      await Future.delayed(const Duration(milliseconds: 10));
-      controller.add(1);
-      await Future.delayed(const Duration(milliseconds: 10));
-      controller.add(2);
-      await Future.delayed(const Duration(milliseconds: 10));
-      controller.add(3);
-      controller.close();
-    });
-
-    test('can mock the state of a single bloc with delays', () async {
-      final counterBloc = MockCounterBloc();
-      final controller = StreamController<int>();
-      whenListen(counterBloc, controller.stream);
-      expectLater(
-        counterBloc,
-        emitsInOrder(
-          <Matcher>[equals(0), equals(1), equals(2), equals(3), emitsDone],
-        ),
-      ).then((_) {
-        expect(counterBloc.state, equals(3));
-      });
-      controller.add(0);
-      await Future.delayed(const Duration(milliseconds: 10));
-      controller.add(1);
-      await Future.delayed(const Duration(milliseconds: 10));
-      controller.add(2);
-      await Future.delayed(const Duration(milliseconds: 10));
-      controller.add(3);
-      controller.close();
-    });
-
-    test('can mock the state of a single bloc with delays and skip(1)',
-        () async {
-      final counterBloc = MockCounterBloc();
-      final controller = StreamController<int>();
-      whenListen(counterBloc, controller.stream);
-      expectLater(
-        counterBloc.skip(1),
-        emitsInOrder(
-          <Matcher>[equals(1), equals(2), equals(3), emitsDone],
-        ),
-      ).then((_) {
-        expect(counterBloc.state, equals(3));
-      });
-      controller.add(0);
-      await Future.delayed(const Duration(milliseconds: 10));
-      controller.add(1);
-      await Future.delayed(const Duration(milliseconds: 10));
-      controller.add(2);
-      await Future.delayed(const Duration(milliseconds: 10));
-      controller.add(3);
-      controller.close();
-    });
-
-    test('can mock the state of a single bloc', () async {
-      final counterBloc = MockCounterBloc();
-      whenListen(counterBloc, Stream.fromIterable([0, 1, 2, 3]));
       await expectLater(
-        counterBloc,
-        emitsInOrder(
-          <Matcher>[equals(0), equals(1), equals(2), equals(3), emitsDone],
-        ),
-      );
-      expect(counterBloc.state, equals(3));
-    });
-
-    test('can mock the stream of a single bloc as broadcast stream', () {
-      final counterBloc = MockCounterBloc();
-      whenListen(counterBloc, Stream.fromIterable([0, 1, 2, 3]));
-      expectLater(
-        counterBloc,
-        emitsInOrder(
-          <Matcher>[equals(0), equals(1), equals(2), equals(3), emitsDone],
-        ),
-      );
-      expectLater(
-        counterBloc,
+        counterCubit,
         emitsInOrder(
           <Matcher>[equals(0), equals(1), equals(2), equals(3), emitsDone],
         ),
       );
     });
 
-    test('can mock the stream of a single bloc as broadcast stream with skips',
+    test('can mock the stream of a single cubit with delays', () async {
+      final counterCubit = MockCounterCubit();
+      final controller = StreamController<int>();
+      whenListen<int>(counterCubit, controller.stream);
+      unawaited(expectLater(
+        counterCubit,
+        emitsInOrder(
+          <Matcher>[equals(0), equals(1), equals(2), equals(3), emitsDone],
+        ),
+      ));
+      controller.add(0);
+      await Future<void>.delayed(Duration.zero);
+      controller.add(1);
+      await Future<void>.delayed(Duration.zero);
+      controller.add(2);
+      await Future<void>.delayed(Duration.zero);
+      controller.add(3);
+      await controller.close();
+    });
+
+    test('can mock the stream of a single cubit with delays and skip(1)',
+        () async {
+      final counterCubit = MockCounterCubit();
+      final controller = StreamController<int>();
+      whenListen<int>(counterCubit, controller.stream);
+      unawaited(expectLater(
+        counterCubit.skip(1),
+        emitsInOrder(
+          <Matcher>[equals(1), equals(2), equals(3), emitsDone],
+        ),
+      ));
+      controller.add(0);
+      await Future<void>.delayed(Duration.zero);
+      controller.add(1);
+      await Future<void>.delayed(Duration.zero);
+      controller.add(2);
+      await Future<void>.delayed(Duration.zero);
+      controller.add(3);
+      await controller.close();
+    });
+
+    test('can mock the state of a single cubit with delays', () async {
+      final counterCubit = MockCounterCubit();
+      final controller = StreamController<int>();
+      whenListen<int>(counterCubit, controller.stream);
+      unawaited(expectLater(
+        counterCubit,
+        emitsInOrder(
+          <Matcher>[equals(0), equals(1), equals(2), equals(3), emitsDone],
+        ),
+      ).then((dynamic _) {
+        expect(counterCubit.state, equals(3));
+      }));
+      controller.add(0);
+      await Future<void>.delayed(Duration.zero);
+      controller.add(1);
+      await Future<void>.delayed(Duration.zero);
+      controller.add(2);
+      await Future<void>.delayed(Duration.zero);
+      controller.add(3);
+      await controller.close();
+    });
+
+    test('can mock the state of a single cubit with delays and skip(1)',
+        () async {
+      final counterCubit = MockCounterCubit();
+      final controller = StreamController<int>();
+      whenListen<int>(counterCubit, controller.stream);
+      unawaited(expectLater(
+        counterCubit.skip(1),
+        emitsInOrder(
+          <Matcher>[equals(1), equals(2), equals(3), emitsDone],
+        ),
+      ).then((dynamic _) {
+        expect(counterCubit.state, equals(3));
+      }));
+      controller.add(0);
+      await Future<void>.delayed(Duration.zero);
+      controller.add(1);
+      await Future<void>.delayed(Duration.zero);
+      controller.add(2);
+      await Future<void>.delayed(Duration.zero);
+      controller.add(3);
+      await controller.close();
+    });
+
+    test('can mock the state of a single cubit', () async {
+      final counterCubit = MockCounterCubit();
+      whenListen<int>(
+        counterCubit,
+        Stream.fromIterable([0, 1, 2, 3]),
+      );
+      await expectLater(
+        counterCubit,
+        emitsInOrder(
+          <Matcher>[equals(0), equals(1), equals(2), equals(3), emitsDone],
+        ),
+      );
+      expect(counterCubit.state, equals(3));
+    });
+
+    test('can mock the stream of a single cubit as broadcast stream', () {
+      final counterCubit = MockCounterCubit();
+      whenListen<int>(
+        counterCubit,
+        Stream.fromIterable([0, 1, 2, 3]),
+      );
+      expectLater(
+        counterCubit,
+        emitsInOrder(
+          <Matcher>[equals(0), equals(1), equals(2), equals(3), emitsDone],
+        ),
+      );
+      expectLater(
+        counterCubit,
+        emitsInOrder(
+          <Matcher>[equals(0), equals(1), equals(2), equals(3), emitsDone],
+        ),
+      );
+    });
+
+    test('can mock the stream of a single cubit as broadcast stream with skips',
         () {
-      final counterBloc = MockCounterBloc();
-      whenListen(counterBloc, Stream.fromIterable([0, 1, 2, 3]));
+      final counterCubit = MockCounterCubit();
+      whenListen<int>(
+        counterCubit,
+        Stream.fromIterable([0, 1, 2, 3]),
+      );
       expectLater(
-        counterBloc.skip(1),
+        counterCubit.skip(1),
         emitsInOrder(
           <Matcher>[equals(1), equals(2), equals(3), emitsDone],
         ),
       );
       expectLater(
-        counterBloc.skip(2),
+        counterCubit.skip(2),
         emitsInOrder(
           <Matcher>[equals(2), equals(3), emitsDone],
         ),
       );
     });
 
-    test('can mock the stream of a single bloc with skip(1)', () {
-      final counterBloc = MockCounterBloc();
-      whenListen(counterBloc, Stream.fromIterable([0, 1, 2, 3]));
+    test('can mock the stream of a single cubit with skip(1)', () {
+      final counterCubit = MockCounterCubit();
+      whenListen<int>(
+        counterCubit,
+        Stream.fromIterable([0, 1, 2, 3]),
+      );
       expectLater(
-        counterBloc.skip(1),
+        counterCubit.skip(1),
         emitsInOrder(
           <Matcher>[equals(1), equals(2), equals(3), emitsDone],
         ),
       );
     });
 
-    test('can mock the state of a single bloc with skip(1)', () async {
-      final counterBloc = MockCounterBloc();
-      whenListen(counterBloc, Stream.fromIterable([0, 1, 2, 3]));
+    test('can mock the state of a single cubit with skip(1)', () async {
+      final counterCubit = MockCounterCubit();
+      whenListen<int>(
+        counterCubit,
+        Stream.fromIterable([0, 1, 2, 3]),
+      );
       await expectLater(
-        counterBloc.skip(1),
+        counterCubit.skip(1),
         emitsInOrder(
           <Matcher>[equals(1), equals(2), equals(3), emitsDone],
         ),
       );
-      expect(counterBloc.state, equals(3));
+      expect(counterCubit.state, equals(3));
     });
 
-    test('can mock the state of a single bloc with skip(1).listen', () async {
-      final counterBloc = MockCounterBloc();
+    test('can mock the state of a single cubit with skip(1).listen', () async {
+      final counterCubit = MockCounterCubit();
       final states = <int>[];
-      whenListen(counterBloc, Stream.fromIterable([0, 1, 2, 3]));
-      counterBloc.skip(1).listen(states.add);
-      await Future.delayed(Duration.zero);
+      whenListen<int>(
+        counterCubit,
+        Stream.fromIterable([0, 1, 2, 3]),
+      );
+      counterCubit.skip(1).listen(states.add);
+      await Future<void>.delayed(Duration.zero);
       expect(states, [1, 2, 3]);
-      expect(counterBloc.state, equals(3));
+      expect(counterCubit.state, equals(3));
     });
 
-    test('can mock the stream of a single bloc with skip(2)', () {
-      final counterBloc = MockCounterBloc();
-      whenListen(counterBloc, Stream.fromIterable([0, 1, 2, 3]));
+    test('can mock the stream of a single cubit with skip(2)', () {
+      final counterCubit = MockCounterCubit();
+      whenListen<int>(
+        counterCubit,
+        Stream.fromIterable([0, 1, 2, 3]),
+      );
       expectLater(
-        counterBloc.skip(2),
+        counterCubit.skip(2),
         emitsInOrder(
           <Matcher>[equals(2), equals(3), emitsDone],
         ),
       );
     });
 
-    test('can mock the state of a single bloc with skip(2).listen', () async {
-      final counterBloc = MockCounterBloc();
+    test('can mock the state of a single cubit with skip(2).listen', () async {
+      final counterCubit = MockCounterCubit();
       final states = <int>[];
-      whenListen(counterBloc, Stream.fromIterable([0, 1, 2, 3]));
-      counterBloc.skip(2).listen(states.add);
-      await Future.delayed(Duration.zero);
+      whenListen<int>(
+        counterCubit,
+        Stream.fromIterable([0, 1, 2, 3]),
+      );
+      counterCubit.skip(2).listen(states.add);
+      await Future<void>.delayed(Duration.zero);
       expect(states, [2, 3]);
-      expect(counterBloc.state, equals(3));
+      expect(counterCubit.state, equals(3));
     });
 
-    test('can mock the state of a single bloc with skip(2)', () async {
-      final counterBloc = MockCounterBloc();
-      whenListen(counterBloc, Stream.fromIterable([0, 1, 2, 3]));
+    test('can mock the state of a single cubit with skip(2)', () async {
+      final counterCubit = MockCounterCubit();
+      whenListen<int>(
+        counterCubit,
+        Stream.fromIterable([0, 1, 2, 3]),
+      );
       await expectLater(
-        counterBloc.skip(2),
+        counterCubit.skip(2),
         emitsInOrder(
           <Matcher>[equals(2), equals(3), emitsDone],
         ),
       );
-      expect(counterBloc.state, equals(3));
+      expect(counterCubit.state, equals(3));
     });
 
-    test('can mock the state of a single bloc with skip(3).listen', () async {
-      final counterBloc = MockCounterBloc();
+    test('can mock the state of a single cubit with skip(3).listen', () async {
+      final counterCubit = MockCounterCubit();
       final states = <int>[];
-      whenListen(counterBloc, Stream.fromIterable([0, 1, 2, 3]));
-      counterBloc.skip(3).listen(states.add);
-      await Future.delayed(Duration.zero);
+      whenListen<int>(
+        counterCubit,
+        Stream.fromIterable([0, 1, 2, 3]),
+      );
+      counterCubit.skip(3).listen(states.add);
+      await Future<void>.delayed(Duration.zero);
       expect(states, [3]);
-      expect(counterBloc.state, equals(3));
+      expect(counterCubit.state, equals(3));
     });
 
-    test('can mock the stream of a single bloc with skip(3)', () {
-      final counterBloc = MockCounterBloc();
-      whenListen(counterBloc, Stream.fromIterable([0, 1, 2, 3]));
+    test('can mock the stream of a single cubit with skip(3)', () {
+      final counterCubit = MockCounterCubit();
+      whenListen<int>(
+        counterCubit,
+        Stream.fromIterable([0, 1, 2, 3]),
+      );
       expectLater(
-        counterBloc.skip(3),
+        counterCubit.skip(3),
         emitsInOrder(
           <Matcher>[equals(3), emitsDone],
         ),
       );
     });
 
-    test('can mock the state of a single bloc with skip(3)', () async {
-      final counterBloc = MockCounterBloc();
-      whenListen(counterBloc, Stream.fromIterable([0, 1, 2, 3]));
+    test('can mock the state of a single cubit with skip(3)', () async {
+      final counterCubit = MockCounterCubit();
+      whenListen<int>(
+        counterCubit,
+        Stream.fromIterable([0, 1, 2, 3]),
+      );
       await expectLater(
-        counterBloc.skip(3),
+        counterCubit.skip(3),
         emitsInOrder(
           <Matcher>[equals(3), emitsDone],
         ),
       );
-      expect(counterBloc.state, equals(3));
+      expect(counterCubit.state, equals(3));
     });
 
-    test('can mock the stream of a bloc dependency', () {
-      final counterBloc = MockCounterBloc();
-      whenListen(counterBloc, Stream.fromIterable([0, 1, 2, 3]));
-      final sumBloc = SumBloc(counterBloc);
-      expectLater(sumBloc, emitsInOrder(<int>[0, 1, 3, 6]));
+    test(
+        'can mock the stream of a cubit dependency '
+        '(with initial state)', () async {
+      final controller = StreamController<int>();
+      final counterCubit = MockCounterCubit();
+      whenListen<int>(counterCubit, controller.stream);
+      final sumCubit = SumCubit(counterCubit);
+      unawaited(expectLater(sumCubit, emitsInOrder(<int>[0, 1, 3, 6])));
+      controller..add(0)..add(1)..add(2)..add(3);
+      await controller.close();
+      expect(sumCubit.state, equals(6));
     });
 
-    test('can mock the state of a bloc dependency', () async {
-      final counterBloc = MockCounterBloc();
-      whenListen(counterBloc, Stream.fromIterable([0, 1, 2, 3]));
-      final sumBloc = SumBloc(counterBloc);
-      await expectLater(sumBloc, emitsInOrder(<int>[0, 1, 3, 6]));
-      expect(sumBloc.state, equals(6));
+    test('can mock the stream of a cubit dependency', () async {
+      final controller = StreamController<int>();
+      final counterCubit = MockCounterCubit();
+      whenListen<int>(counterCubit, controller.stream);
+      final sumCubit = SumCubit(counterCubit);
+      unawaited(expectLater(sumCubit, emitsInOrder(<int>[1, 3, 6])));
+      controller..add(1)..add(2)..add(3);
+      await controller.close();
+      expect(sumCubit.state, equals(6));
     });
   });
 }

@@ -4,21 +4,29 @@ import 'package:angular/core.dart'
     show ChangeDetectorRef, OnDestroy, Pipe, PipeTransform;
 import 'package:bloc/bloc.dart';
 
-/// {@template blocpipe}
-/// A `pipe` which helps bind [Bloc] state changes to the presentation layer.
+/// {@template bloc_pipe}
+/// A `pipe` which helps bind [Bloc] and [Cubit]
+/// state changes to the presentation layer.
+///
 /// [BlocPipe] handles rendering the html element in response to new states.
 /// [BlocPipe] is very similar to `AsyncPipe` but has simplified API
 /// to reduce the amount of boilerplate code needed.
+///
+/// See also:
+///
+/// * [Bloc] for more information about how to make and use blocs.
+/// * [Cubit] for more information about how to make and use cubits.
+///
 /// {@endtemplate}
 @Pipe('bloc', pure: false)
 class BlocPipe implements OnDestroy, PipeTransform {
+  /// {@macro bloc_pipe}
+  BlocPipe(this._ref);
+
   final ChangeDetectorRef _ref;
-  Bloc _bloc;
+  Cubit _cubit;
   Object _latestValue;
   StreamSubscription _subscription;
-
-  /// {@macro blocpipe}
-  BlocPipe(this._ref);
 
   @override
   void ngOnDestroy() {
@@ -29,31 +37,31 @@ class BlocPipe implements OnDestroy, PipeTransform {
 
   /// Angular invokes the [transform] method with the value of a binding as the
   /// first argument, and any parameters as the second argument in list form.
-  dynamic transform(Bloc bloc) {
-    if (_bloc == null) {
-      if (bloc != null) {
-        _subscribe(bloc);
+  dynamic transform(Cubit cubit) {
+    if (_cubit == null) {
+      if (cubit != null) {
+        _subscribe(cubit);
       }
-    } else if (!_maybeStreamIdentical(bloc, _bloc)) {
+    } else if (!_maybeStreamIdentical(cubit, _cubit)) {
       _dispose();
-      return transform(bloc);
+      return transform(cubit);
     }
-    if (bloc == null) {
+    if (cubit == null) {
       return null;
     }
-    return _latestValue ?? bloc.initialState;
+    return _latestValue ?? cubit.state;
   }
 
-  void _subscribe(Bloc bloc) {
-    _bloc = bloc;
-    _subscription = bloc.listen(
-      (value) => _updateLatestValue(bloc, value),
+  void _subscribe(Cubit cubit) {
+    _cubit = cubit;
+    _subscription = cubit.listen(
+      (dynamic value) => _updateLatestValue(cubit, value),
       onError: (dynamic e) => throw e,
     );
   }
 
   void _updateLatestValue(dynamic async, Object value) {
-    if (identical(async, _bloc)) {
+    if (identical(async, _cubit)) {
       _latestValue = value;
       _ref.markForCheck();
     }
@@ -63,7 +71,7 @@ class BlocPipe implements OnDestroy, PipeTransform {
     _subscription.cancel();
     _latestValue = null;
     _subscription = null;
-    _bloc = null;
+    _cubit = null;
   }
 
   // StreamController.stream getter always returns new Stream instance,

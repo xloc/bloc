@@ -1,30 +1,24 @@
 import 'package:meta/meta.dart';
 
+import 'change.dart';
+
 /// {@template transition}
 /// Occurs when an [event] is `added` after `mapEventToState` has been called
-/// but before the [bloc]'s `state` has been updated.
+/// but before the bloc's [State] has been updated.
 /// A [Transition] consists of the [currentState], the [event] which was
 /// `added`, and the [nextState].
 /// {@endtemplate}
 @immutable
-class Transition<Event, State> {
-  /// The current [State] of the [bloc] at the time of the [Transition].
-  final State currentState;
+class Transition<Event, State> extends Change<State> {
+  /// {@macro transition}
+  const Transition({
+    @required State currentState,
+    @required this.event,
+    @required State nextState,
+  }) : super(currentState: currentState, nextState: nextState);
 
   /// The [Event] which triggered the current [Transition].
   final Event event;
-
-  /// The next [State] of the [bloc] at the time of the [Transition].
-  final State nextState;
-
-  /// {@macro transition}
-  const Transition({
-    @required this.currentState,
-    @required this.event,
-    @required this.nextState,
-  })  : assert(currentState != null),
-        assert(event != null),
-        assert(nextState != null);
 
   @override
   bool operator ==(Object other) =>
@@ -36,11 +30,12 @@ class Transition<Event, State> {
           nextState == other.nextState;
 
   @override
-  int get hashCode =>
-      currentState.hashCode ^ event.hashCode ^ nextState.hashCode;
+  int get hashCode {
+    return currentState.hashCode ^ event.hashCode ^ nextState.hashCode;
+  }
 
   @override
-  String toString() =>
-      'Transition { currentState: $currentState, event: $event, '
-      'nextState: $nextState }';
+  String toString() {
+    return '''Transition { currentState: $currentState, event: $event, nextState: $nextState }''';
+  }
 }

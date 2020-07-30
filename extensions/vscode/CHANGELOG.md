@@ -1,3 +1,56 @@
+# 5.0.0
+
+- **BREAKING**: update to latest bloc packages
+  - bloc -> ^6.0.0
+  - bloc_test -> ^7.0.0
+  - flutter_bloc -> ^6.0.0
+  - hydrated_bloc -> ^6.0.0
+- fix: remove error dialog when no `pubspec.yaml` found in root
+
+# 4.2.2
+
+- fix: Equatable not being recognized on Windows
+
+# 4.2.1
+
+- fix: `CubitObserver` snippet fixes
+- fix: `BlocObserver` snippet fixes
+
+# 4.2.0
+
+- feat: Add Open Migration Guide for `bloc`, `flutter_bloc`, and `hydrated_bloc`
+
+# 4.1.1
+
+- fix: package version analysis on dev_dependencies
+
+# 4.1.0
+
+- Include "Cubit: New Cubit" command to generate a cubit and state
+- Include Cubit Ecosystem when performing package version analysis
+- Infer Equatable Usage
+- Update snippets to support
+  - `Cubit`
+  - `CubitBuilder`
+  - `CubitListener`
+  - `MultiCubitListener`
+  - `CubitConsumer`
+  - `CubitProvider`
+  - `MultiCubitProvider`
+  - `CubitObserver`
+  - `context.cubit()`
+  - `CubitProvider.of()`
+
+# 4.0.0
+
+Update latest package versions:
+
+- equatable -> ^1.2.0
+- bloc -> ^5.0.0
+- bloc_test -> ^6.0.0
+- flutter_bloc -> ^5.0.0
+- hydrated_bloc -> ^5.0.0
+
 # 3.6.0
 
 Update latest package versions:

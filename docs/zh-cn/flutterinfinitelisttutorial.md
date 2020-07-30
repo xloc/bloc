@@ -177,13 +177,13 @@
 
 如果我们在每次`Transition(状态转移)`时都做一些事情来响应这些状态转移的话, 我们只需要创建自己的`BlocDelegate`就可以了.
 
-[simple_bloc_delegate.dart](../_snippets/flutter_infinite_list_tutorial/simple_bloc_delegate.dart.md ':include')
+[simple_bloc_observer.dart](../_snippets/flutter_infinite_list_tutorial/simple_bloc_observer.dart.md ':include')
 
 ?> 我们只需要继承`BlocDelegate`并重写`onTransition`方法.
 
 为了让bloc知道我们刚写的`SimpleBlocDelegate`我们只需要像这样稍微改动main函数
 
-[main.dart](../_snippets/flutter_infinite_list_tutorial/bloc_delegate_main.dart.md ':include')
+[main.dart](../_snippets/flutter_infinite_list_tutorial/bloc_observer_main.dart.md ':include')
 
 现在, 当我们运行应用, 每次`Transition(状态转移)`发生时我们都可以在终端看到打印出的文本.
 

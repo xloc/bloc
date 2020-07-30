@@ -54,30 +54,28 @@ Before we dive into the implementation, we need to define what our `PostBloc` is
 
 At a high level, it will be responding to user input (scrolling) and fetching more posts in order for the presentation layer to display them. Let’s start by creating our `Event`.
 
-Our `PostBloc` will only be responding to a single event; `Fetch` which will be added by the presentation layer whenever it needs more Posts to present. Since our `Fetch` event is a type of `PostEvent` we can create `bloc/post_event.dart` and implement the event like so.
+Our `PostBloc` will only be responding to a single event; `PostFetched` which will be added by the presentation layer whenever it needs more Posts to present. Since our `PostFetched` event is a type of `PostEvent` we can create `bloc/post_event.dart` and implement the event like so.
 
 [post_event.dart](../_snippets/flutter_infinite_list_tutorial/post_event.dart.md ':include')
 
-?> Again, we are overriding `toString` for an easier to read string representation of our event. Again, we are extending [`Equatable`](https://pub.dev/packages/equatable) so that we can compare instances for equality.
-
-To recap, our `PostBloc` will be receiving `PostEvents` and converting them to `PostStates`. We have defined all of our `PostEvents` (Fetch) so next let’s define our `PostState`.
+To recap, our `PostBloc` will be receiving `PostEvents` and converting them to `PostStates`. We have defined all of our `PostEvents` (PostFetched) so next let’s define our `PostState`.
 
 ## Post States
 
 Our presentation layer will need to have several pieces of information in order to properly lay itself out:
 
-- `PostUninitialized`- will tell the presentation layer it needs to render a loading indicator while the initial batch of posts are loaded
+- `PostInitial`- will tell the presentation layer it needs to render a loading indicator while the initial batch of posts are loaded
 
-- `PostLoaded`- will tell the presentation layer it has content to render
+- `PostSuccess`- will tell the presentation layer it has content to render
   - `posts`- will be the `List<Post>` which will be displayed
   - `hasReachedMax`- will tell the presentation layer whether or not it has reached the maximum number of posts
-- `PostError`- will tell the presentation layer that an error has occurred while fetching posts
+- `PostFailure`- will tell the presentation layer that an error has occurred while fetching posts
 
 We can now create `bloc/post_state.dart` and implement it like so.
 
 [post_state.dart](../_snippets/flutter_infinite_list_tutorial/post_state.dart.md ':include')
 
-?> We implemented `copyWith` so that we can copy an instance of `PostLoaded` and update zero or more properties conveniently (this will come in handy later ).
+?> We implemented `copyWith` so that we can copy an instance of `PostSuccess` and update zero or more properties conveniently (this will come in handy later ).
 
 Now that we have our `Events` and `States` implemented, we can create our `PostBloc`.
 
@@ -95,23 +93,19 @@ Let’s create `post_bloc.dart` and create our empty `PostBloc`.
 
 ?> **Note:** just from the class declaration we can tell that our PostBloc will be taking PostEvents as input and outputting PostStates.
 
-We can start by implementing `initialState` which will be the state of our `PostBloc` before any events have been added.
-
-[post_bloc.dart](../_snippets/flutter_infinite_list_tutorial/post_bloc_initial_state.dart.md ':include')
-
 Next, we need to implement `mapEventToState` which will be fired every time a `PostEvent` is added.
 
 [post_bloc.dart](../_snippets/flutter_infinite_list_tutorial/post_bloc_map_event_to_state.dart.md ':include')
 
 Our `PostBloc` will `yield` whenever there is a new state because it returns a `Stream<PostState>`. Check out [core concepts](https://bloclibrary.dev/#/coreconcepts?id=streams) for more information about `Streams` and other core concepts.
 
-Now every time a `PostEvent` is added, if it is a `Fetch` event and there are more posts to fetch, our `PostBloc` will fetch the next 20 posts.
+Now every time a `PostEvent` is added, if it is a `PostFetched` event and there are more posts to fetch, our `PostBloc` will fetch the next 20 posts.
 
 The API will return an empty array if we try to fetch beyond the maximum number of posts (100), so if we get back an empty array, our bloc will `yield` the currentState except we will set `hasReachedMax` to true.
 
-If we cannot retrieve the posts, we throw an exception and `yield` `PostError()`.
+If we cannot retrieve the posts, we throw an exception and `yield` `PostFailure()`.
 
-If we can retrieve the posts, we return `PostLoaded()` which takes the entire list of posts.
+If we can retrieve the posts, we return `PostSuccess()` which takes the entire list of posts.
 
 One optimization we can make is to `debounce` the `Events` in order to prevent spamming our API unnecessarily. We can do this by overriding the `transform` method in our `PostBloc`.
 
@@ -133,7 +127,7 @@ Great! Now that we’ve finished implementing the business logic all that’s le
 
 In our `main.dart` we can start by implementing our main function and calling `runApp` to render our root widget.
 
-In our `App` widget, we use `BlocProvider` to create and provide an instance of `PostBloc` to the subtree. Also, we add a `Fetch` event so that when the app loads, it requests the initial batch of Posts.
+In our `App` widget, we use `BlocProvider` to create and provide an instance of `PostBloc` to the subtree. Also, we add a `PostFetched` event so that when the app loads, it requests the initial batch of Posts.
 
 [main.dart](../_snippets/flutter_infinite_list_tutorial/main.dart.md ':include')
 
@@ -147,7 +141,7 @@ Moving along, our build method returns a `BlocBuilder`. `BlocBuilder` is a Flutt
 
 !> We need to remember to clean up after ourselves and dispose of our `ScrollController` when the StatefulWidget is disposed.
 
-Whenever the user scrolls, we calculate how far away from the bottom of the page they are and if the distance is ≤ our `_scrollThreshold` we add a `Fetch` event in order to load more posts.
+Whenever the user scrolls, we calculate how far away from the bottom of the page they are and if the distance is ≤ our `_scrollThreshold` we add a `PostFetched` event in order to load more posts.
 
 Next, we need to implement our `BottomLoader` widget which will indicate to the user that we are loading more posts.
 
@@ -167,19 +161,19 @@ One added bonus of using the bloc library is that we can have access to all `Tra
 
 Even though in this application we only have one bloc, it's fairly common in larger applications to have many blocs managing different parts of the application's state.
 
-If we want to be able to do something in response to all `Transitions` we can simply create our own `BlocDelegate`.
+If we want to be able to do something in response to all `Transitions` we can simply create our own `BlocObserver`.
 
-[simple_bloc_delegate.dart](../_snippets/flutter_infinite_list_tutorial/simple_bloc_delegate.dart.md ':include')
+[simple_bloc_observer.dart](../_snippets/flutter_infinite_list_tutorial/simple_bloc_observer.dart.md ':include')
 
-?> All we need to do is extend `BlocDelegate` and override the `onTransition` method.
+?> All we need to do is extend `BlocObserver` and override the `onTransition` method.
 
-In order to tell Bloc to use our `SimpleBlocDelegate`, we just need to tweak our main function.
+In order to tell Bloc to use our `SimpleBlocObserver`, we just need to tweak our main function.
 
-[main.dart](../_snippets/flutter_infinite_list_tutorial/bloc_delegate_main.dart.md ':include')
+[main.dart](../_snippets/flutter_infinite_list_tutorial/bloc_observer_main.dart.md ':include')
 
 Now when we run our application, every time a Bloc `Transition` occurs we can see the transition printed to the console.
 
-?> In practice, you can create different `BlocDelegates` and because every state change is recorded, we are able to very easily instrument our applications and track all user interactions and state changes in one place!
+?> In practice, you can create different `BlocObservers` and because every state change is recorded, we are able to very easily instrument our applications and track all user interactions and state changes in one place!
 
 That’s all there is to it! We’ve now successfully implemented an infinite list in flutter using the [bloc](https://pub.dev/packages/bloc) and [flutter_bloc](https://pub.dev/packages/flutter_bloc) packages and we’ve successfully separated our presentation layer from our business logic.
 

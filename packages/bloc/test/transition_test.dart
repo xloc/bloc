@@ -13,8 +13,9 @@ class SimpleTransitionEvent extends TransitionEvent {}
 class SimpleTransitionState extends TransitionState {}
 
 class CounterEvent extends TransitionEvent {
-  final String eventData;
   CounterEvent(this.eventData);
+
+  final String eventData;
 
   @override
   bool operator ==(Object other) =>
@@ -28,8 +29,9 @@ class CounterEvent extends TransitionEvent {
 }
 
 class CounterState extends TransitionState {
-  final int count;
   CounterState(this.count);
+
+  final int count;
 
   @override
   bool operator ==(Object other) =>
@@ -46,7 +48,7 @@ void main() {
   group('Transition Tests', () {
     group('constructor', () {
       test(
-          'should throw assertion error when initialized '
+          'should not throw assertion error when initialized '
           'with a null currentState', () {
         expect(
           () => Transition<TransitionEvent, TransitionState>(
@@ -54,13 +56,12 @@ void main() {
             event: SimpleTransitionEvent(),
             nextState: SimpleTransitionState(),
           ),
-          throwsA(
-            TypeMatcher<AssertionError>(),
-          ),
+          isNot(throwsA(isA<AssertionError>())),
         );
       });
 
-      test('should throw assertion error when initialized with a null event',
+      test(
+          'should not throw assertion error when initialized with a null event',
           () {
         expect(
           () => Transition<TransitionEvent, TransitionState>(
@@ -68,24 +69,20 @@ void main() {
             event: null,
             nextState: SimpleTransitionState(),
           ),
-          throwsA(
-            TypeMatcher<AssertionError>(),
-          ),
+          isNot(throwsA(isA<AssertionError>())),
         );
       });
 
       test(
-          'should throw assertion error when initialized with a null nextState',
-          () {
+          'should not throw assertion error '
+          'when initialized with a null nextState', () {
         expect(
           () => Transition<TransitionEvent, TransitionState>(
             currentState: SimpleTransitionState(),
             event: SimpleTransitionEvent(),
             nextState: null,
           ),
-          throwsA(
-            TypeMatcher<AssertionError>(),
-          ),
+          isNot(throwsA(isA<AssertionError>())),
         );
       });
 

@@ -1,3 +1,72 @@
+# 6.0.1
+
+- docs: minor documentation fixes and improvements
+
+# 6.0.0
+
+- **BREAKING**: upgrade to `bloc ^6.0.0`
+- **BREAKING**: `BlocBuilder` interop with `cubit` (`bloc` parameter renamed to `cubit`)
+- **BREAKING**: `BlocListener` interop with `cubit` (`bloc` parameter renamed to `cubit`)
+- **BREAKING**: `BlocConsumer` interop with `cubit` (`bloc` parameter renamed to `cubit`)
+- feat: remove external dependency on [package:flutter_cubit](https://pub.dev/packages/flutter_cubit)
+- docs: inline documentation updates
+- docs: README updates
+- docs: example application updates
+
+# 6.0.0-dev.1
+
+- **BREAKING**: upgrade to `bloc ^6.0.0-dev.1`
+- **BREAKING**: `BlocBuilder` interop with `cubit` (`bloc` parameter renamed to `cubit`)
+- **BREAKING**: `BlocListener` interop with `cubit` (`bloc` parameter renamed to `cubit`)
+- **BREAKING**: `BlocConsumer` interop with `cubit` (`bloc` parameter renamed to `cubit`)
+- feat: remove external dependency on [package:flutter_cubit](https://pub.dev/packages/flutter_cubit)
+- docs: inline documentation updates
+- docs: README updates
+- docs: example application updates
+
+# 5.0.1
+
+- fix: upgrade to `bloc ^5.0.1`
+- docs: minor documentation updates
+
+# 5.0.0
+
+- **BREAKING**: `condition` on `BlocBuilder` renamed to `buildWhen`
+- **BREAKING**: `condition` on `BlocListener` renamed to `listenWhen`
+- **BREAKING**: upgrade to `bloc v5.0.0`
+- refactor: internal implementation updates to use [flutter_cubit](https://pub.dev/packages/flutter_cubit)
+- docs: various improvements
+- docs: logo updates
+
+# 5.0.0-dev.5
+
+- Update to `bloc: ^5.0.0-dev.11`
+- Minor README updates
+
+# 5.0.0-dev.4
+
+- Update to `bloc: ^5.0.0-dev.10`
+- Minor README updates
+
+# 5.0.0-dev.3
+
+- Update to `bloc: ^5.0.0-dev.7`
+
+# 5.0.0-dev.2
+
+- Update to `bloc: ^5.0.0-dev.6`
+- Update to `flutter_cubit ^0.0.12`
+- Various Documentation Updates
+
+# 5.0.0-dev.1
+
+- Update to `bloc: ^5.0.0-dev.3`
+- Internal implementation updates to use [flutter_cubit](https://pub.dev/packages/flutter_cubit)
+
+# 4.0.1
+
+- Fix `ProviderNotFoundException` handling ([#1286](https://github.com/felangel/bloc/pull/1286))
+
 # 4.0.0
 
 - Update to `bloc: ^4.0.0`

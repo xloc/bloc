@@ -1,3 +1,64 @@
+# 7.0.0
+
+- **BREAKING**: upgrade to `bloc ^6.0.0`
+- **BREAKING**: `MockBloc` only requires `State` type
+- **BREAKING**: `whenListen` only requires `State` type
+- **BREAKING**: `blocTest` only requires `State` type
+- **BREAKING**: `blocTest` `skip` defaults to `0`
+- **BREAKING**: `blocTest` make `build` synchronous
+- fix: `blocTest` improve `wait` behavior when debouncing, etc...
+- feat: `blocTest` do not require `async` on `act` and `verify`
+- feat: remove external dependency on [package:cubit_test](https://pub.dev/packages/cubit_test)
+- feat: `MockBloc` is compatible with `cubit`
+- feat: `whenListen` is compatible with `cubit`
+- feat: `blocTest` is compatible with `cubit`
+
+# 7.0.0-dev.2
+
+- **BREAKING**: `blocTest` make `build` synchronous
+- fix: `blocTest` improve `wait` behavior when debouncing, etc...
+- feat: `blocTest` do not require `async` on `act` and `verify`
+
+# 7.0.0-dev.1
+
+- **BREAKING**: upgrade to `bloc ^6.0.0-dev.1`
+- **BREAKING**: `MockBloc` only requires `State` type
+- **BREAKING**: `whenListen` only requires `State` type
+- **BREAKING**: `blocTest` only requires `State` type
+- **BREAKING**: `blocTest` `skip` defaults to `0`
+- feat: remove external dependency on [package:cubit_test](https://pub.dev/packages/cubit_test)
+- feat: `MockBloc` is compatible with `cubit`
+- feat: `whenListen` is compatible with `cubit`
+- feat: `blocTest` is compatible with `cubit`
+
+# 6.0.1
+
+- fix: upgrade to `bloc ^5.0.1`
+- fix: upgrade to `cubit_test ^0.1.1`
+- docs: minor documentation updates
+
+# 6.0.0
+
+- feat: upgrade to `bloc ^5.0.0`
+- refactor: internal implementation updates to use [cubit_test](https://pub.dev/packages/cubit_test)
+
+# 6.0.0-dev.4
+
+- Update to `bloc ^5.0.0-dev.11`.
+
+# 6.0.0-dev.3
+
+- Update to `bloc ^5.0.0-dev.10`.
+
+# 6.0.0-dev.2
+
+- Update to `bloc ^5.0.0-dev.7`.
+
+# 6.0.0-dev.1
+
+- Update to `bloc ^5.0.0-dev.6`.
+- Internal implementation updates to use [cubit_test](https://pub.dev/packages/cubit_test)
+
 # 5.1.0
 
 - Add `errors` to `blocTest` to enable expecting unhandled exceptions within blocs.
